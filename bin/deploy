@@ -1,0 +1,86 @@
+#!/usr/bin/env node
+
+var Inquirer = require('inquirer'),
+	Repo = require('git-tools'),
+	Vow = require('vow'),
+	glob = require('glob'),
+	spawn = require('child_process').spawn,
+	path = require('path'),
+
+deployExec = function(server, branch) {
+	var child = spawn('bundle', ['exec', 'cap', server, 'deploy', 'BRANCH=' + branch]);
+
+	child.on('exit', function(code) {
+		process.exit(code);
+	});
+
+	child.stdout.on('data', function(chunk) {
+		process.stdout.write(chunk);
+	});
+
+	child.stderr.on('data', function(chunk) {
+		process.stderr.write(chunk);
+	});
+},
+
+getServers = function(configPath) {
+	var ext = '.rb',
+		defer = Vow.defer(),
+		question = {
+			type: 'list',
+			name: 'server',
+			message: 'Server',
+		};
+
+	glob(configPath + ext, function(er, files) {
+		var servers = files.map(function(file) {
+			var pathArray = file.split('/'),
+				name = pathArray[pathArray.length - 1];
+
+			return {
+				value: path.basename(name, ext),
+				key: name
+			};
+		});
+
+		question.choices = servers;
+
+		defer.resolve(question);
+	});
+
+	return defer.promise();
+},
+
+getBranches = function(repoPath) {
+	var defer = Vow.defer(),
+		repo = new Repo(repoPath);
+		question = {
+			type: 'list',
+			name: 'branch',
+			message: 'Branch',
+		};
+
+	repo.branches(function(error, list) {
+		var branches = list.map(function(b) {
+			return {
+				value: b.name,
+				key: "{name} - {subject} <{author}>"
+					.replace('{name}', b.name)
+					.replace('{subject}', b.subject)
+					.replace('{author}', b.author.name)
+			}
+		});
+
+		question.choices = branches;
+
+		defer.resolve(question);
+	});
+
+	return defer.promise();
+}
+
+Vow.all([getServers('./app/config/deploy/*'), getBranches('./')]).then(function(questions) {
+	Inquirer.prompt(questions, function(answers) {
+		deployExec(answers.server, answers.branch);
+	});
+});

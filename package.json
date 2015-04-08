@@ -1,0 +1,28 @@
+{
+  "name": "capdeploy",
+  "version": "1.0.0",
+  "description": "Capistrano 3 deploy tool",
+  "author": "Nikolay Kostyurin",
+  "license": "MIT",
+  "bin": {
+    "capdeploy": "bin/deploy"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JiLiZART/capdeploy.git"
+  },
+  "bugs": {
+    "url": "https://github.com/JiLiZART/capdeploy/issues"
+  },
+  "homepage": "https://github.com/JiLiZART/capdeploy",
+  "preferGlobal": true,
+  "dependencies": {
+    "git-tools": "^0.1.4",
+    "glob": "^5.0.3",
+    "inquirer": "^0.8.2",
+    "vow": "^0.4.9"
+  }
+}
